@@ -12,7 +12,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using WebApplication1.Data;
-using WebApplication1.Utility;
+using WebApplication1_DataAccess;
+using WebApplication1_DataAccess.Initializer;
+using WebApplication1_DataAccess.Repository;
+using WebApplication1_DataAccess.Repository.IRepository;
+using WebApplication1_Utility;
+using WebApplication1_Utility.BrainTree;
 
 namespace WebApplication1
 {
@@ -41,11 +46,22 @@ namespace WebApplication1
                 Options.Cookie.HttpOnly = true;
                 Options.Cookie.IsEssential = true;
             });
+            services.Configure<BrainTreeSettings>(Configuration.GetSection("BrainTree"));
+            services.AddSingleton<IBrainTreeGate, BrainTreeGate>();
+            services.AddScoped<ICategoryRepository, CategoryRepository>();
+            services.AddScoped<IApplicationTypeRepository, ApplicationTypeRepository>();
+            services.AddScoped<IProductRepository, ProductRepository>();
+            services.AddScoped<IInquiryHeaderRepository, InquiryHeaderRepository>();
+            services.AddScoped<IInquiryDetailRepository, InquiryDetailRepository>();
+            services.AddScoped<IApplicationUserRepository, ApplicationUserRepository>();
+            services.AddScoped<IOrderHeaderRepository, OrderHeaderRepository>();
+            services.AddScoped<IOrderDetailRepository, OrderDetailRepository>();
             services.AddControllersWithViews();
+            services.AddScoped<IDbInitializer, DbInitializer>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IDbInitializer dbInitializer)
         {
             if (env.IsDevelopment())
             {
@@ -63,6 +79,7 @@ namespace WebApplication1
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
+            dbInitializer.Initialize();
             app.UseSession();
             app.UseEndpoints(endpoints =>
             {

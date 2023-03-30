@@ -5,23 +5,26 @@ using System.Collections.Generic;
 using System.Data;
 using System.Security.Policy;
 using WebApplication1.Data;
-using WebApplication1.Models;
+using WebApplication1_DataAccess;
+using WebApplication1_DataAccess.Repository.IRepository;
+using WebApplication1_Models;
+using WebApplication1_Utility;
 
 namespace WebApplication1.Controllers
 {
     [Authorize(Roles = WC.AdminRole)]
     public class CategoryController : Controller
     {
-        private readonly ApplicationDbContext _db;
+        private readonly ICategoryRepository _catRepo;
 
-        public CategoryController(ApplicationDbContext db)
+        public CategoryController(ICategoryRepository catRepo)
         {
-            _db = db;
+            _catRepo = catRepo;
         }
 
         public IActionResult Index()
         {
-            IEnumerable<Category> objList = _db.Category;
+            IEnumerable<Category> objList = _catRepo.GetAll();
             return View(objList);
         }
 
@@ -37,10 +40,12 @@ namespace WebApplication1.Controllers
         {
             if (ModelState.IsValid)
             {
-                _db.Category.Add(obj);
-                _db.SaveChanges();
+                _catRepo.Add(obj);
+                _catRepo.Save();
+                TempData[WC.Success] = "Category created succesfuly";
                 return RedirectToAction("Index");
             }
+            TempData[WC.Error] = "Error while creating category";
             return View(obj);
         }
 
@@ -50,7 +55,7 @@ namespace WebApplication1.Controllers
             {
                 return NotFound();
             }
-            var obj = _db.Category.Find(id);
+            var obj = _catRepo.Find(id.GetValueOrDefault());
             if (obj == null)
             {
                 return NotFound();
@@ -65,8 +70,8 @@ namespace WebApplication1.Controllers
         {
             if (ModelState.IsValid)
             {
-                _db.Category.Update(obj);
-                _db.SaveChanges();
+                _catRepo.Update(obj);
+                _catRepo.Save();
                 return RedirectToAction("Index");
             }
             return View(obj);
@@ -79,7 +84,7 @@ namespace WebApplication1.Controllers
             {
                 return NotFound();
             }
-            var obj = _db.Category.Find(id);
+            var obj = _catRepo.Find(id.GetValueOrDefault());
             if (obj == null)
             {
                 return NotFound();
@@ -92,14 +97,14 @@ namespace WebApplication1.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult DeletePost(int? id)
         {
-            var obj = _db.Category.Find(id);
+            var obj = _catRepo.Find(id.GetValueOrDefault());
             if (obj == null)
             {
                 return NotFound();
             }
-            _db.Category.Remove(obj);
+            _catRepo.Remove(obj);
 
-            _db.SaveChanges();
+            _catRepo.Save();
                return RedirectToAction("Index");
             
         }

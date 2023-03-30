@@ -5,7 +5,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Braintree" Version="4.17.0" />
     <PackageReference Include="Mailjet.Api" Version="1.2.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="5.0.17" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="5.0.17" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="5.0.17" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="5.0.17" />
@@ -13,11 +15,19 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="5.0.17" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="5.0.2" />
+    <PackageReference Include="Syncfusion.EJ2.AspNet.Core" Version="18.1.0.59" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="wwwroot\images\product\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WebApplication1_DataAccess\WebApplication1_DataAccess.csproj" />
+    <ProjectReference Include="..\WebApplication1_Models\WebApplication1_Models.csproj" />
+    <ProjectReference Include="..\WebApplication1_Utility\WebApplication1_Utility.csproj" />
   </ItemGroup>
 
 </Project>

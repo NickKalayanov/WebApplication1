@@ -8,42 +8,46 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using WebApplication1.Data;
-using WebApplication1.Models;
-using WebApplication1.Models.ViewModels;
-using WebApplication1.Utility;
+using WebApplication1_DataAccess;
+using WebApplication1_DataAccess.Repository.IRepository;
+using WebApplication1_Models;
+using WebApplication1_Models.ViewModels;
+using WebApplication1_Utility;
 
 namespace WebApplication1.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private readonly ApplicationDbContext _db;
+        private readonly IProductRepository _prodRepo;
+        private readonly ICategoryRepository _catRepo;
 
-        public HomeController(ILogger<HomeController> logger, ApplicationDbContext db)
+        public HomeController(ILogger<HomeController> logger, ApplicationDbContext db, ICategoryRepository catRepo, IProductRepository prodRepo)
         {
             _logger = logger;
-            _db = db;
+            _catRepo = catRepo;
+            _prodRepo= prodRepo;
         }
 
         public IActionResult Index()
         {
             HomeVM homeVM = new HomeVM()
             {
-                Products = _db.Product.Include(u => u.Category).Include(u => u.ApplicationType),
-                Categories = _db.Category
+                Products = _prodRepo.GetAll(includeProperties: "Category,ApplicationType"),
+                Categories = _catRepo.GetAll()
             };
             return View(homeVM);
         }
 
         [HttpPost,ActionName("Details")]
-        public IActionResult DetailsPost(int id)
+        public IActionResult DetailsPost(int id, DetailsVM detailsVM)
         {
             List<ShoppingCart> shoppingCartList = new List<ShoppingCart>();
             if (HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart) != null && HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart).Count() > 0)
             {
                 shoppingCartList = HttpContext.Session.Get<List<ShoppingCart>>(WC.SessionCart);
             }
-            shoppingCartList.Add(new ShoppingCart { ProductId = id });
+            shoppingCartList.Add(new ShoppingCart { ProductId = id, SqFt = detailsVM.Product.TempSqFt });
             HttpContext.Session.Set(WC.SessionCart, shoppingCartList);
             return RedirectToAction(nameof(Index));
         }
@@ -80,8 +84,7 @@ namespace WebApplication1.Controllers
 
             DetailsVM DetailsVM = new DetailsVM()
             {
-                Product = _db.Product.Include(u => u.Category).Include(u => u.ApplicationType)
-                .Where(u => u.Id == id).FirstOrDefault(),
+                Product = _prodRepo.FirstOrDefault(u=>u.Id==id,includeProperties: "Category,ApplicationType"),
                 ExistInCart = false
             };
             foreach (var item in shoppingCartList)

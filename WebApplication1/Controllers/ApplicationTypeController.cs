@@ -5,23 +5,26 @@ using System.Collections.Generic;
 using System.Data;
 using System.Security.Policy;
 using WebApplication1.Data;
-using WebApplication1.Models;
+using WebApplication1_DataAccess;
+using WebApplication1_DataAccess.Repository.IRepository;
+using WebApplication1_Models;
+using WebApplication1_Utility;
 
 namespace WebApplication1.Controllers
 {
     [Authorize(Roles = WC.AdminRole)]
     public class ApplicationTypeController : Controller
     {
-        private readonly ApplicationDbContext _db;
+        private readonly IApplicationTypeRepository _appTypeRepo;
 
-        public ApplicationTypeController(ApplicationDbContext db)
+        public ApplicationTypeController(IApplicationTypeRepository appTypeRepo)
         {
-            _db = db;
+            _appTypeRepo = appTypeRepo;
         }
 
         public IActionResult Index()
         {
-            IEnumerable<ApplicationType> objList = _db.ApplicationType;
+            IEnumerable<ApplicationType> objList = _appTypeRepo.GetAll();
             return View(objList);
         }
 
@@ -35,8 +38,8 @@ namespace WebApplication1.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Create(ApplicationType obj)
         {
-            _db.ApplicationType.Add(obj);
-            _db.SaveChanges();
+            _appTypeRepo.Add(obj);
+            _appTypeRepo.Save();
             return RedirectToAction("Index");
         }
 
@@ -46,7 +49,7 @@ namespace WebApplication1.Controllers
             {
                 return NotFound();
             }
-            var obj = _db.ApplicationType.Find(id);
+            var obj = _appTypeRepo.Find(id.GetValueOrDefault());
             if (obj == null)
             {
                 return NotFound();
@@ -61,8 +64,8 @@ namespace WebApplication1.Controllers
         {
             if (ModelState.IsValid)
             {
-                _db.ApplicationType.Update(obj);
-                _db.SaveChanges();
+                _appTypeRepo.Update(obj);
+                _appTypeRepo.Save();
                 return RedirectToAction("Index");
             }
             return View(obj);
@@ -75,7 +78,7 @@ namespace WebApplication1.Controllers
             {
                 return NotFound();
             }
-            var obj = _db.ApplicationType.Find(id);
+            var obj = _appTypeRepo.Find(id.GetValueOrDefault());
             if (obj == null)
             {
                 return NotFound();
@@ -88,14 +91,14 @@ namespace WebApplication1.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult DeletePost(int? id)
         {
-            var obj = _db.ApplicationType.Find(id);
+            var obj = _appTypeRepo.Find(id.GetValueOrDefault());
             if (obj == null)
             {
                 return NotFound();
             }
-            _db.ApplicationType.Remove(obj);
+            _appTypeRepo.Remove(obj);
 
-            _db.SaveChanges();
+            _appTypeRepo.Save();
             return RedirectToAction("Index");
 
         }

@@ -1,4 +1,5 @@
-﻿@model WebApplication1.Models.ViewModels.DetailsVM
+﻿@using WebApplication1_Utility;
+@model WebApplication1_Models.ViewModels.DetailsVM
 
 <div class="">
     <form method="post">
@@ -23,13 +24,29 @@
                                 <div class="row pl-3">
 
                                     <div class="col-12">
-                                        <span class="badge p-3 border" style="background-color:lavenderblush">@Model.Product.Category.Name</span>
-                                        <span class="badge p-3 border" style="background-color:azure">@Model.Product.ApplicationType.Name</span>
+                                        <span class="badge p-3 border text-dark" style="background-color:lavenderblush">@Model.Product.Category.Name</span>
+                                        <span class="badge p-3 border text-dark" style="background-color:azure">@Model.Product.ApplicationType.Name</span>
                                         <h3 class="text-success"></h3>
 
                                         <p class="text-secondary">@Html.Raw(Model.Product.Description)</p>
                                     </div>
-
+                                    @if (User.IsInRole(WC.AdminRole))
+                                    {
+                                        <div class="col-12">
+                                            SqFt:
+                                        </div>
+                                        <div class="col-12">
+                                            @if (Model.ExistInCart)
+                                            {
+                                                <input asp-for="@Model.Product.TempSqFt" disabled class="form-control"/>
+                                            }
+                                            else
+                                            {
+                                                <input asp-for="@Model.Product.TempSqFt" class="form-control" />
+                                            }
+                                            <span asp-asp-validation-for="@Model.Product.TempSqFt" class="text-danger"></span>
+                                        </div>   
+                                    }
                                 </div>
                             </div>
                         </div>
@@ -56,3 +73,8 @@
         </div>
     </form>
 </div>
+
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

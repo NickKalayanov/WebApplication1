@@ -10,25 +10,28 @@ using System.IO;
 using System.Linq;
 using System.Security.Policy;
 using WebApplication1.Data;
-using WebApplication1.Models;
-using WebApplication1.Models.ViewModels;
+using WebApplication1_DataAccess;
+using WebApplication1_DataAccess.Repository.IRepository;
+using WebApplication1_Models;
+using WebApplication1_Models.ViewModels;
+using WebApplication1_Utility;
 
 namespace WebApplication1.Controllers
 {
     [Authorize(Roles = WC.AdminRole)]
     public class ProductController : Controller
     {
-        private readonly ApplicationDbContext _db;
+        private readonly IProductRepository _prodRepo;
         private readonly IWebHostEnvironment _webHostEnvironment;
-        public ProductController(ApplicationDbContext db, IWebHostEnvironment webHostEnvironment)
+        public ProductController(IProductRepository prodRepo, IWebHostEnvironment webHostEnvironment)
         {
-            _db = db;
+            _prodRepo = prodRepo;
             _webHostEnvironment = webHostEnvironment;
         }
 
         public IActionResult Index()
         {
-            IEnumerable<Product> objList = _db.Product.Include(u=>u.Category).Include(u=> u.ApplicationType);
+            IEnumerable<Product> objList = _prodRepo.GetAll(includeProperties: "Category,ApplicationType");
 
             //foreach (var obj in objList)
             //{
@@ -55,16 +58,8 @@ namespace WebApplication1.Controllers
             ProductVM productVM = new ProductVM()
             {
                 Product = new Product(),
-                CategorySelectList = _db.Category.Select(i => new SelectListItem
-                {
-                    Text = i.Name,
-                    Value = i.Id.ToString(),
-                }),
-                ApplicationTypeSelectList = _db.ApplicationType.Select(i => new SelectListItem
-                {
-                    Text = i.Name,
-                    Value = i.Id.ToString(),
-                })
+                CategorySelectList = _prodRepo.GetAllDropDownList(WC.CategoryName),
+                ApplicationTypeSelectList = _prodRepo.GetAllDropDownList(WC.ApplicationTypeName),
             };
             if (id == null)
             {
@@ -72,7 +67,7 @@ namespace WebApplication1.Controllers
             }
             else
             {
-                productVM.Product = _db.Product.Find(id);
+                productVM.Product = _prodRepo.Find(id.GetValueOrDefault());
                 if (productVM.Product == null)
                 {
                     return NotFound();
@@ -102,12 +97,12 @@ namespace WebApplication1.Controllers
 
                     productVM.Product.Image = fileName + extension;
 
-                    _db.Product.Add(productVM.Product);
+                    _prodRepo.Add(productVM.Product);
 
                 }
                 else
                 {
-                    var objFromDb = _db.Product.AsNoTracking().FirstOrDefault(u => u.Id == productVM.Product.Id);
+                    var objFromDb = _prodRepo.FirstOrDefault(u => u.Id == productVM.Product.Id, isTracking: false);
 
                     if (files.Count > 0)
                     {
@@ -133,19 +128,11 @@ namespace WebApplication1.Controllers
                     {
                         productVM.Product.Image = objFromDb.Image;
                     }
-                    _db.Product.Update(productVM.Product);
+                    _prodRepo.Update(productVM.Product);
                 }
-                productVM.CategorySelectList = _db.Category.Select(i => new SelectListItem
-                {
-                    Text = i.Name,
-                    Value = i.Id.ToString(),
-                });
-                productVM.ApplicationTypeSelectList = _db.ApplicationType.Select(i => new SelectListItem
-                {
-                    Text = i.Name,
-                    Value = i.Id.ToString(),
-                });
-                _db.SaveChanges();
+                productVM.CategorySelectList = _prodRepo.GetAllDropDownList(WC.CategoryName);
+                productVM.ApplicationTypeSelectList = _prodRepo.GetAllDropDownList(WC.ApplicationTypeName);
+                _prodRepo.Save();
                 return RedirectToAction("Index");
             }
             return View(productVM);
@@ -160,7 +147,7 @@ namespace WebApplication1.Controllers
             {
                 return NotFound();
             }
-            Product product = _db.Product.Include(u=>u.Category).Include(u => u.ApplicationType).FirstOrDefault(u=>u.Id==id);
+            Product product = _prodRepo.FirstOrDefault(u=>u.Id== id, includeProperties: "Category,ApplicationType");
             if (product == null)
             {
                 return NotFound();
@@ -172,8 +159,8 @@ namespace WebApplication1.Controllers
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public IActionResult DeletePost(int? id)
-        {
-            var obj = _db.Product.Find(id);
+        { 
+            var obj = _prodRepo.Find(id.GetValueOrDefault());
             if (obj == null)
             {
                 return NotFound();
@@ -187,9 +174,9 @@ namespace WebApplication1.Controllers
                 System.IO.File.Delete(oldFIle);
             }
 
-            _db.Product.Remove(obj);
+            _prodRepo.Remove(obj);
 
-            _db.SaveChanges();
+            _prodRepo.Save();
                return RedirectToAction("Index");
             
         }

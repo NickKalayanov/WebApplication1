@@ -13,7 +13,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
-using WebApplication1.Models;
+using WebApplication1_Models;
+using WebApplication1_Utility;
 
 namespace WebApplication1.Areas.Identity.Pages.Account
 {
@@ -72,11 +73,6 @@ namespace WebApplication1.Areas.Identity.Pages.Account
 
         public async Task OnGetAsync(string returnUrl = null)
         {
-            if (!await _roleManager.RoleExistsAsync(WC.AdminRole))
-            {
-                await _roleManager.CreateAsync(new IdentityRole(WC.AdminRole));
-                await _roleManager.CreateAsync(new IdentityRole(WC.CustomerRole));
-            }
 
             ReturnUrl = returnUrl;
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
